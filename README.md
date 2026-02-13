@@ -1,4 +1,4 @@
-# ImageApp — Setup & Run Guide
+# 1. ImageApp — Setup & Run Guide
 
 First, clone the repository:
 
@@ -7,9 +7,9 @@ git clone https://github.com/berndmehnert/imageapp.git
 cd imageapp
 ```
 
-## 1. Backend Setup
+## 1.1 Backend Setup
 
-### 1.1 PostgreSQL + pgvector
+### 1.1.1 PostgreSQL + pgvector
 
 **Option A: Docker (recommended)**
 
@@ -30,7 +30,7 @@ sudo -u postgres psql -c "CREATE DATABASE imagedb;"
 sudo -u postgres psql -d imagedb -c "CREATE EXTENSION vector;"
 ```
 
-### 1.2 ML Model Setup (one-time)
+### 1.1.2 ML Model Setup (one-time)
 
 Create the model directory:
 
@@ -60,7 +60,7 @@ tokenizer.save_pretrained('./backend/model')
 "
 ```
 
-### 1.3 C Libraries
+### 1.1.3 C Libraries
 
 Download the ONNX Runtime and HuggingFace Tokenizer libraries and copy them into `backend/model/`:
 
@@ -80,7 +80,7 @@ tar xzf libtokenizers.linux-amd64.tar.gz
 cp libtokenizers.a ./backend/model/
 ```
 
-### 1.4 Verify Model Directory
+### 1.1.4 Verify Model Directory
 
 Your `backend/model/` should now contain:
 
@@ -92,7 +92,7 @@ backend/model/
 └── libtokenizers.a      # Tokenizer library
 ```
 
-### 1.5 Start the Backend
+### 1.1.5 Start the Backend
 
 Make sure [Go 1.21+](https://go.dev/dl/) is installed, then from the `backend/` directory:
 
@@ -115,7 +115,7 @@ Worker 1: processing complete for image 2
 Worker 2: processing complete for image 3
 ```
 
-## 2. Frontend Setup
+## 1.2 Frontend Setup
 
 Make sure [Node.js 18+](https://nodejs.org/) is installed, then from the `frontend/` directory:
 
@@ -126,7 +126,7 @@ npm run dev
 
 Open the provided link (usually `http://localhost:5173`) and enjoy! 🎉
 
-## 3. Quick Reference
+## 1.3 Quick Reference
 
 | Endpoint | Description |
 |---|---|
@@ -135,7 +135,7 @@ Open the provided link (usually `http://localhost:5173`) and enjoy! 🎉
 | `GET /api/feed?filter=cat` | Fuzzy filtered feed by tags |
 | `WS /ws` | WebSocket for live updates |
 
-## 4. Tech Stack
+## 1.4 Tech Stack
 
 | Component | Technology |
 |---|---|
@@ -144,3 +144,26 @@ Open the provided link (usually `http://localhost:5173`) and enjoy! 🎉
 | Database | PostgreSQL · pgvector |
 | ML Model | all-MiniLM-L6-v2 (ONNX) |
 | Imaging | disintegration/imaging |
+
+# 2. Architecture, design decisions and todos
+## 2.1 What is imageapp?
+- imageapp is a full-stack image platform with semantic search capabilities.
+## 2.2 How it works:
+- User uploads an image with a title and tags via a multipart form
+- A worker pool creates a 512×512 thumbnail and generates a 384-dimensional vector embedding from the tags using a sentence-transformer model (all-MiniLM-L6-v2) running as ONNX inference natively in Go
+- The image, metadata, and embedding are stored in PostgreSQL with pgvector
+- A WebSocket broadcast informs all connected frontends that new content is available
+- The React frontend shows an infinite-scroll feed of thumbnails
+- Users can fuzzy-filter by tags — the search query is embedded using the same 
+   model and matched against stored embeddings via cosine similarity in pgvector
+## 2.3 Design decisions
+- The requirements of the test suggested semantic search
+- Single database which can handle relational data and vector search was used, this was perfect for a test like this
+## 2.4 Things that are missing and I had no time for
+- Download of images
+- Include title in filter
+- Caching
+- Tests
+- Docker files
+- Introduce users, authentication, authorization
+# 3. Query examples by image
