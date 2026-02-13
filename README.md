@@ -168,7 +168,13 @@ Open the provided link (usually `http://localhost:5173`) and enjoy! 🎉
 - Introduce users, authentication, authorization
 # 3. Query examples by image
 ![Image 1](imageapp1.png)
+
 ![Image 2](imageapp2.png)
+
 ![Image 3](imageapp3.png)
+
 ![Image 4](imageapp4.png)
+
+![Image 5](imageapp5.png)
+
 
